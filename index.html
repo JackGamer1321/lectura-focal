@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LecturaFocal - Prototipo Digital</title>
+    <style>
+        /* --- ESTILOS CSS --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fce4ec;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* --- 🖼️ IMÁGENES LATERALES --- */
+        .imagen-lateral {
+            position: fixed;
+            width: 180px;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 20px;
+            border: 4px solid white;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            z-index: -1;
+            transition: all 0.4s ease;
+            opacity: 0.85;
+        }
+        .imagen-lateral:hover {
+            transform: scale(1.1) rotate(0deg) !important;
+            opacity: 1;
+            z-index: 10;
+        }
+        .img-izq-1 { top: 15%; left: 5%; transform: rotate(-8deg); animation: flotar 4s ease-in-out infinite; }
+        .img-izq-2 { bottom: 15%; left: 8%; transform: rotate(6deg); animation: flotar 5s ease-in-out infinite 1s; }
+        .img-der-1 { top: 15%; right: 5%; transform: rotate(8deg); animation: flotar 4.5s ease-in-out infinite 0.5s; }
+        .img-der-2 { bottom: 15%; right: 8%; transform: rotate(-6deg); animation: flotar 5.5s ease-in-out infinite 1.5s; }
+
+        @keyframes flotar {
+            0%, 100% { transform: translateY(0) rotate(var(--rotacion, 0deg)); }
+            50% { transform: translateY(-15px) rotate(var(--rotacion, 0deg)); }
+        }
+
+        @keyframes caerSuave {
+            0% { opacity: 0; transform: translateY(-50px) scale(0.9); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .contenedor {
+            background-color: white;
+            width: 100%;
+            max-width: 700px; /* Un poco más ancho para el texto largo */
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border: 3px solid #f8bbd0;
+            position: relative;
+            animation: caerSuave 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            z-index: 5;
+        }
+
+        @keyframes girarFlores {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(10deg) scale(1.1); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+        .flor { position: absolute; color: #ffb300; font-size: 30px; opacity: 0.7; animation: girarFlores 4s ease-in-out infinite; }
+        .flor1 { top: -15px; left: -15px; }
+        .flor2 { top: -10px; right: -10px; animation-delay: 0.5s; }
+        .flor3 { bottom: -15px; left: 20px; animation-delay: 1s; }
+
+        h1 { color: #1565c0; text-align: center; font-size: 22px; margin-bottom: 5px; font-weight: 800; }
+        .subtitulo { text-align: center; color: #555; font-size: 14px; margin-bottom: 25px; font-style: italic; }
+
+        .campo {
+            margin-bottom: 18px;
+            background-color: #f9f9f9;
+            padding: 12px;
+            border-radius: 10px;
+            border-left: 5px solid #1565c0;
+            transition: all 0.3s ease;
+        }
+        .campo:hover {
+            background-color: #f0f7ff;
+            transform: translateX(5px);
+            box-shadow: 0 4px 10px rgba(21, 101, 192, 0.1);
+        }
+
+        label { display: block; font-weight: bold; color: #1565c0; margin-bottom: 8px; font-size: 15px; }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 14px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        textarea { resize: vertical; min-height: 80px; } /* Para que se pueda estirar */
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #1565c0;
+            box-shadow: 0 0 8px rgba(21, 101, 192, 0.4);
+            transform: scale(1.01);
+        }
+
+        button {
+            background-color: #1565c0;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+        }
+        button:hover { background-color: #0d47a1; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(13, 71, 161, 0.3); }
+        button:active { transform: translateY(1px) scale(0.98); }
+
+        @keyframes aparecerZoom {
+            0% { opacity: 0; transform: scale(0.5) rotate(-5deg); }
+            70% { transform: scale(1.05) rotate(2deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        #resultado {
+            display: none;
+            margin-top: 20px;
+            padding: 25px;
+            background-color: #e3f2fd;
+            border-radius: 15px;
+            border: 3px solid #1565c0;
+        }
+        #resultado.animar-entrada {
+            display: block;
+            animation: aparecerZoom 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes aparecerDesdeAbajo {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .dato-animado { opacity: 0; animation: aparecerDesdeAbajo 0.5s ease forwards; }
+        .retraso-1 { animation-delay: 0.2s; }
+        .retraso-2 { animation-delay: 0.4s; }
+        .retraso-3 { animation-delay: 0.6s; }
+        .retraso-4 { animation-delay: 0.8s; }
+
+        #resultado h2 { color: #0d47a1; margin-top: 0; text-align: center; font-size: 26px; border-bottom: 2px dashed #1565c0; padding-bottom: 10px; }
+        .eslogan { text-align: center; color: #1565c0; font-style: italic; margin-top: -10px; margin-bottom: 20px; font-size: 15px; }
+        
+        .dato { margin-bottom: 15px; font-size: 16px; line-height: 1.6; }
+        .etiqueta { font-weight: bold; color: #1565c0; display: block; margin-bottom: 5px; font-size: 17px; }
+        
+        .icono-dibujo { font-size: 60px; text-align: center; display: block; margin: 10px 0 20px 0; }
+        
+        /* Estilo para listas dentro del resultado */
+        .lista-resultado {
+            margin: 5px 0 0 20px;
+            padding: 0;
+            list-style-type: disc;
+        }
+        .lista-resultado li {
+            margin-bottom: 5px;
+        }
+
+        .boton-reiniciar { background-color: #546e7a; margin-top: 20px; }
+        .boton-reiniciar:hover { background-color: #37474f; }
+
+        .imagen-prototipo { max-width: 120px; max-height: 120px; border-radius: 10px; display: block; margin: 0 auto 20px auto; border: 2px solid #1565c0; }
+
+        .ocultar-formulario { animation: desaparecer 0.3s ease forwards; }
+        @keyframes desaparecer { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.95); } }
+
+        /* --- 📱 RESPONSIVE --- */
+        @media (max-width: 1200px) { .imagen-lateral { width: 120px; height: 120px; opacity: 0.5; } }
+        @media (max-width: 900px) { .imagen-lateral { display: none; } }
+    </style>
+</head>
+<body>
+
+    <!-- IMÁGENES LATERALES (Puedes cambiarlas por imágenes de lectura) -->
+    <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=400&fit=crop" alt="Libro" class="imagen-lateral img-izq-1" style="--rotacion: -8deg;">
+    <img src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=400&h=400&fit=crop" alt="Biblioteca" class="imagen-lateral img-izq-2" style="--rotacion: 6deg;">
+    <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=400&fit=crop" alt="Investigación" class="imagen-lateral img-der-1" style="--rotacion: 8deg;">
+    <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=400&fit=crop" alt="Estudio" class="imagen-lateral img-der-2" style="--rotacion: -6deg;">
+
+    <div class="contenedor">
+        <span class="flor flor1">✿</span>
+        <span class="flor flor2">✿</span>
+        <span class="flor flor3">✿</span>
+
+        <h1>🚀 Prototipado Rápido: "Diseñemos una Plataforma Ideal"</h1>
+        <p class="subtitulo">Lee más rápido, comprende mejor.</p>
+
+        <form id="formularioPlataforma">
+            <div class="campo">
+                <label>✅ 1. Nombre de la aplicación:</label>
+                <input type="text" id="nombreApp" value="LecturaFocal" required>
+            </div>
+
+            <div class="campo">
+                <label>✅ 2. Eslogan (opcional pero recomendado):</label>
+                <input type="text" id="esloganApp" value="Lee más rápido, comprende mejor" required>
+            </div>
+
+            <div class="campo">
+                <label>✅ 3. Tipo de información que ofrecerá:</label>
+                <textarea id="tipoInfo" rows="6" required>Artículos y fragmentos de entrenamiento: Textos de diferentes géneros (científico, literario, periodístico) diseñados para medir la velocidad de lectura.
+Guías interactivas de técnicas de lectura: Explicaciones visuales y paso a paso de métodos avanzados (como el Skimming, Scanning, la lectura en bloques y la eliminación de la subvocalización).
+Estadísticas de progreso personal: Paneles de rendimiento en tiempo real que muestran la evolución del usuario (palabras por minuto y porcentaje de aciertos en comprensión).
+Cuestionarios de comprensión lectora: Tests rápidos al finalizar cada lectura para asegurar que la velocidad no afecte la retención de ideas.</textarea>
+            </div>
+
+            <div class="campo">
+                <label>✅ 4. Dos funciones digitales específicas:</label>
+                <input type="text" id="funcion1" value="Velocímetro visual dinámico (guía de enfoque de palabras por minuto para evitar regresiones)" required>
+                <br><br>
+                <input type="text" id="funcion2" value="Generador automático de mapas conceptuales y esquemas de comprensión lectora al terminar la lectura" required>
+            </div>
+
+            <div class="campo">
+                <label>✅ 5. Un dibujo representativo:</label>
+                <input type="text" id="dibujo" value="🧠📖" required>
+                <small style="color:#666; display:block; margin-top:5px;">Tip: Usa emojis como 🧠📖 o una URL de imagen.</small>
+            </div>
+
+            <button type="button" onclick="generarPrototipo()">✨ Generar Prototipo Digital</button>
+        </form>
+
+        <div id="resultado">
+            <div id="resDibujoContenedor" class="dato-animado retraso-1"></div>
+            <h2 id="resNombre" class="dato-animado retraso-2">Nombre App</h2>
+            <p id="resEslogan" class="eslogan dato-animado retraso-2">Eslogan</p>
+            
+            <div class="dato dato-animado retraso-3">
+                <span class="etiqueta">📋 Tipo de información:</span>
+                <div id="resInfo"></div>
+            </div>
+            
+            <div class="dato dato-animado retraso-4">
+                <span class="etiqueta">⚙️ Funciones digitales:</span>
+                <ul class="lista-resultado">
+                    <li id="resFun1">...</li>
+                    <li id="resFun2">...</li>
+                </ul>
+            </div>
+
+            <button class="boton-reiniciar" onclick="reiniciar()">🔄 Crear otro prototipo</button>
+        </div>
+    </div>
+
+    <script>
+        // --- LÓGICA JAVASCRIPT ---
+
+        // Función auxiliar para convertir texto con saltos de línea en lista HTML
+        function formatearTextoALista(texto) {
+            // Separamos por saltos de línea y filtramos las líneas vacías
+            const lineas = texto.split('\n').filter(linea => linea.trim() !== '');
+            
+            // Si solo hay una línea, devolvemos un párrafo normal
+            if (lineas.length <= 1) {
+                return `<p style="margin:0;">${texto}</p>`;
+            }
+            
+            // Si hay varias líneas, creamos una lista <ul>
+            let htmlLista = '<ul class="lista-resultado">';
+            lineas.forEach(linea => {
+                // Si la línea empieza con "- " o "* ", lo quitamos para que no se duplique el guion
+                let textoLimpio = linea.replace(/^[-*]\s*/, '');
+                htmlLista += `<li>${textoLimpio}</li>`;
+            });
+            htmlLista += '</ul>';
+            return htmlLista;
+        }
+
+        function generarPrototipo() {
+            const nombre = document.getElementById('nombreApp').value.trim();
+            const eslogan = document.getElementById('esloganApp').value.trim();
+            const info = document.getElementById('tipoInfo').value.trim();
+            const fun1 = document.getElementById('funcion1').value.trim();
+            const fun2 = document.getElementById('funcion2').value.trim();
+            const dibujoInput = document.getElementById('dibujo').value.trim();
+
+            if (!nombre || !info || !fun1 || !fun2 || !dibujoInput) {
+                alert("¡Espera! Por favor completa todos los campos para que el prototipo sea válido.");
+                return;
+            }
+
+            // Manejo del dibujo (URL o Emoji)
+            const contenedorDibujo = document.getElementById('resDibujoContenedor');
+            if (dibujoInput.startsWith('http://') || dibujoInput.startsWith('https://')) {
+                contenedorDibujo.innerHTML = `<img src="${dibujoInput}" class="imagen-prototipo" alt="Dibujo representativo" onerror="this.src='https://via.placeholder.com/120?text=Error+Imagen'">`;
+            } else {
+                contenedorDibujo.innerHTML = `<span class="icono-dibujo">${dibujoInput}</span>`;
+            }
+
+            // Inyectar datos
+            document.getElementById('resNombre').innerText = nombre;
+            
+            // Si hay eslogan, lo mostramos; si no, ocultamos el espacio
+            const elementoEslogan = document.getElementById('resEslogan');
+            if (eslogan) {
+                elementoEslogan.innerText = `"${eslogan}"`;
+                elementoEslogan.style.display = 'block';
+            } else {
+                elementoEslogan.style.display = 'none';
+            }
+
+            // Usamos la función para formatear el texto largo como lista
+            document.getElementById('resInfo').innerHTML = formatearTextoALista(info);
+            
+            document.getElementById('resFun1').innerText = fun1;
+            document.getElementById('resFun2').innerText = fun2;
+
+            // Animación de cambio de pantalla
+            const formulario = document.getElementById('formularioPlataforma');
+            const resultado = document.getElementById('resultado');
+
+            formulario.classList.add('ocultar-formulario');
+            
+            setTimeout(() => {
+                formulario.style.display = 'none';
+                formulario.classList.remove('ocultar-formulario');
+                resultado.style.display = 'block';
+                resultado.classList.add('animar-entrada');
+                
+                // Reiniciar animaciones de los datos
+                const datosAnimados = resultado.querySelectorAll('.dato-animado');
+                datosAnimados.forEach(dato => {
+                    dato.style.animation = 'none';
+                    dato.offsetHeight;
+                    dato.style.animation = '';
+                });
+            }, 300);
+        }
+
+        function reiniciar() {
+            const formulario = document.getElementById('formularioPlataforma');
+            const resultado = document.getElementById('resultado');
+
+            resultado.classList.remove('animar-entrada');
+            resultado.style.display = 'none';
+            
+            formulario.reset();
+            formulario.style.display = 'block';
+            formulario.style.animation = 'caerSuave 0.5s ease forwards';
+            
+            setTimeout(() => {
+                formulario.style.animation = '';
+            }, 500);
+        }
+    </script>
+</body>
+</html>
